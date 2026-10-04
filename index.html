@@ -1,0 +1,2786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#f8f7f4">
+  <meta name="background-color" content="#f8f7f4">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Passly">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <title>Passly — Event Tickets</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,600&display=swap');
+
+    :root {
+      --ink: #151515;
+      --muted: #737373;
+      --line: #e8e6e2;
+      --paper: #f8f7f4;
+      --card: #fff;
+      --accent: #d7f24b;
+      --soft: #efeee9;
+      --danger: #b42318;
+      --green: #177245;
+      --header-h: 64px;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: "DM Sans", sans-serif;
+      background: var(--paper);
+      font-size: 15px;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    a { text-decoration: none; color: inherit; }
+    button, input, select, textarea { font: inherit; }
+    img { max-width: 100%; display: block; }
+button, a, .ticket-tier, .event-card { touch-action: manipulation; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+    /* ============ HEADER ============ */
+    .site-header {
+      height: var(--header-h);
+      padding: 0 max(12px, env(safe-area-inset-right)) 0 max(12px, env(safe-area-inset-left));
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(248, 247, 244, 0.96);
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .brand {
+      font-weight: 700;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .brand-mark {
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      background: var(--ink);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .site-header nav {
+      display: none;
+      gap: 22px;
+      font-size: 14px;
+      color: #666;
+      flex: 1;
+    }
+
+    .site-header nav a {
+      cursor: pointer;
+    }
+
+    .site-header nav a:hover,
+    .site-header nav .active { color: var(--ink); }
+
+    .header-actions {
+      display: none;
+      gap: 10px;
+      align-items: center;
+      margin-left: auto;
+    }
+
+    .menu-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: 0;
+      font-size: 24px;
+      line-height: 1;
+      margin-left: auto;
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      color: var(--ink);
+    }
+
+    .menu-toggle:active { background: var(--soft); }
+
+    /* Mobile drawer */
+    .mobile-drawer {
+      position: fixed;
+      top: var(--header-h);
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #fff;
+      z-index: 99;
+      padding: 24px 20px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+    }
+
+    .mobile-drawer.open { display: flex; }
+
+    .mobile-drawer a,
+    .mobile-drawer button {
+      padding: 16px 12px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      text-align: left;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      color: var(--ink);
+      display: block;
+      width: 100%;
+    }
+
+    .mobile-drawer a:active,
+    .mobile-drawer button:active { background: var(--soft); }
+
+    .mobile-drawer .drawer-cta {
+      background: var(--ink);
+      color: #fff;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .mobile-drawer .drawer-ghost {
+      border: 1px solid var(--line);
+      text-align: center;
+    }
+
+    .mobile-drawer .drawer-user {
+      padding: 14px 12px;
+      background: var(--soft);
+      border-radius: 10px;
+      font-size: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .mobile-drawer .drawer-user small { color: var(--muted); font-size: 12px; }
+
+    /* ============ BUTTONS ============ */
+    .btn {
+      border: 0;
+      border-radius: 9px;
+      padding: 12px 16px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      font-weight: 600;
+      font-size: 14px;
+      min-height: 44px;
+      transition: opacity 0.15s;
+    }
+
+    .btn:active { opacity: 0.8; }
+
+    .btn-dark { background: var(--ink); color: white; }
+    .btn-ghost { background: transparent; border: 1px solid var(--line); }
+    .btn-lg { padding: 14px 20px; min-height: 50px; font-size: 15px; }
+    .full { width: 100%; }
+
+    .text-link {
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 4px;
+      cursor: pointer;
+    }
+
+    /* ============ HERO ============ */
+    .hero {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 40px 20px 50px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 36px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      font-weight: 700;
+      color: #777;
+      text-transform: uppercase;
+    }
+
+    .hero h1 {
+      font-size: clamp(34px, 8vw, 68px);
+      line-height: 1.05;
+      letter-spacing: -0.045em;
+      margin: 14px 0;
+    }
+
+    .hero h1 em {
+      font-family: "Playfair Display", serif;
+      font-weight: 500;
+    }
+
+    .hero p, .page-title p {
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 580px;
+      font-size: 15px;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 24px;
+      flex-wrap: wrap;
+    }
+
+    .hero-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+      transform: none;
+    }
+
+    .mini-top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      color: #888;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      background: #79bd63;
+      border-radius: 50%;
+    }
+
+    .hero-card h3 { font-size: 24px; margin: 24px 0 8px; }
+    .hero-card p { font-size: 13px; }
+
+    .ticket-row {
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid var(--line);
+      padding: 14px 0;
+      font-size: 14px;
+    }
+
+    /* ============ SECTIONS ============ */
+    .section { max-width: 1180px; margin: auto; padding: 20px; }
+
+    .section-head, .page-title, .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .section h2, .panel h2 { margin: 8px 0 4px; font-size: 22px; }
+
+    /* ============ ICONS + EVENT GROUPS ============ */
+    .icon {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 18px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .icon-sm { width: 16px; height: 16px; flex-basis: 16px; }
+    .btn .icon { margin-left: -2px; }
+
+    .event-category-group { display: block; margin-bottom: 20px; }
+    .event-category-heading { display: none; }
+    .event-category-icon {
+      width: 34px;
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      background: var(--soft);
+      flex: 0 0 34px;
+    }
+
+    .event-category-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .event-category-group > .event-grid { margin-top: 0; }
+    .event-grid.category-cascade { display: block; }
+    .filter-clear { display: none; }
+
+
+    /* ============ EVENT GRID ============ */
+    .event-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .event-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+
+    .event-card:active { transform: scale(0.99); }
+
+    .event-art {
+      height: 150px;
+      background: linear-gradient(135deg, #dedbd1, #bfc5b8);
+      padding: 16px;
+      display: flex;
+      align-items: flex-end;
+    }
+
+    .event-art span {
+      background: rgba(255, 255, 255, 0.86);
+      padding: 6px 9px;
+      border-radius: 7px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .event-body { padding: 16px; }
+    .event-body h3 { margin: 0 0 8px; font-size: 18px; }
+    .event-body p { margin: 5px 0; color: #777; font-size: 13px; }
+
+    .event-bottom {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 16px;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .event-bottom strong { font-size: 15px; }
+
+    /* ============ FEATURE STRIP ============ */
+    .feature-strip {
+      max-width: 1180px;
+      margin: 40px auto;
+      padding: 40px 20px;
+      border-top: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+
+    .feature-strip b { font-size: 11px; color: #999; }
+    .feature-strip h3 { margin: 14px 0 7px; font-size: 18px; }
+    .feature-strip p { color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+    /* ============ FOOTER ============ */
+    .footer {
+      padding: 28px 20px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      color: #888;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    /* ============ PAGE WRAPPER ============ */
+    .page {
+      max-width: 1180px;
+      margin: auto;
+      padding: 28px 20px 70px;
+    }
+
+    .page-title {
+      align-items: flex-start;
+      flex-direction: column;
+      margin-bottom: 24px;
+      gap: 16px;
+    }
+
+    .page-title h1 {
+      font-size: clamp(28px, 6vw, 44px);
+      letter-spacing: -0.03em;
+      margin: 6px 0;
+      line-height: 1.1;
+    }
+
+    /* ============ FILTERS ============ */
+    .filters {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .input {
+      border: 1px solid #ddd9d1;
+      background: #fff;
+      border-radius: 8px;
+      padding: 13px 14px;
+      outline: none;
+      width: 100%;
+      font-size: 16px;
+      min-height: 46px;
+    }
+
+    .input:focus { border-color: #999; }
+
+    /* ============ TICKET LIST ============ */
+    .ticket-list { display: grid; gap: 14px; }
+
+    .ticket-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .ticket-card h3 { margin: 5px 0; font-size: 17px; }
+
+    .ticket-meta {
+      display: flex;
+      gap: 8px 16px;
+      color: #777;
+      font-size: 13px;
+      flex-wrap: wrap;
+    }
+
+    .ticket-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .ticket-actions .btn { flex: 1; min-width: 130px; }
+
+    /* ============ TABS ============ */
+    .tabs {
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .tabs::-webkit-scrollbar { display: none; }
+
+    .tab {
+      background: none;
+      border: 0;
+      padding: 12px 0;
+      color: #888;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .tab.active { color: #111; border-color: #111; }
+    .tab span {
+      font-size: 11px;
+      background: #eee;
+      padding: 3px 6px;
+      border-radius: 9px;
+    }
+
+    /* ============ TICKET SHEET ============ */
+    .ticket-page { max-width: 820px; }
+
+    .ticket-sheet {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 15px 45px rgba(0, 0, 0, 0.06);
+    }
+
+    .ticket-head {
+      padding: 24px;
+      border-bottom: 1px dashed #ccc;
+    }
+
+    .ticket-head h1 { font-size: clamp(24px, 5vw, 35px); margin: 10px 0; line-height: 1.15; }
+
+    .ticket-info {
+      display: grid;
+      grid-template-columns: 1fr;
+      padding: 22px 24px;
+      gap: 18px;
+    }
+
+    .ticket-info span, .payout-hero span, .stats span {
+      font-size: 11px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .ticket-info strong { display: block; margin-top: 5px; }
+
+    .qr {
+      width: 150px;
+      height: 150px;
+      margin: 15px auto;
+      border: 10px solid #fff;
+      box-shadow: 0 0 0 1px #ddd;
+      display: grid;
+      place-items: center;
+      background: repeating-linear-gradient(45deg, #111 0 3px, #fff 3px 6px);
+    }
+
+    .qr b { background: #fff; padding: 8px; font-size: 10px; }
+
+    .ticket-foot {
+      padding: 20px 24px;
+      background: #f5f4f0;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .ticket-foot .btn { width: 100%; }
+
+    /* ============ STATS ============ */
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .stats > div {
+      background: #fff;
+      border: 1px solid var(--line);
+      padding: 16px;
+      border-radius: 13px;
+    }
+
+    .stats strong { display: block; font-size: 20px; margin: 8px 0 4px; }
+    .stats small { color: #888; font-size: 12px; }
+
+    /* ============ PANELS ============ */
+    .panel {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+
+    .wide { min-width: 0; }
+
+    .org-event {
+      padding: 16px 0;
+      border-top: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .org-event:first-child { border-top: 0; }
+    .org-event h3 { margin: 0 0 5px; font-size: 17px; }
+    .org-event p { color: #777; font-size: 13px; margin: 0; }
+
+    .org-actions {
+      display: flex;
+      gap: 7px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .mini-btn {
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 9px 12px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 13px;
+      min-height: 38px;
+    }
+
+    /* ============ SALES LIST ============ */
+    .sales-list > div {
+      padding: 14px 0;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 14px;
+    }
+
+    .sales-list > div:first-child { border-top: 0; }
+    .sales-list small { display: block; color: #888; margin-top: 4px; font-size: 12px; }
+
+    /* ============ FORMS ============ */
+    .form-layout { display: grid; gap: 18px; }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .form-grid label { font-size: 13px; font-weight: 600; }
+    .form-grid .input { margin-top: 7px; }
+    .span-2 { grid-column: span 1; }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 22px;
+      flex-direction: column;
+    }
+
+    .form-actions .btn { width: 100%; }
+
+    /* ============ TABLES ============ */
+    .table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 0 -20px;
+      padding: 0 20px;
+    }
+
+    .table-panel { padding-bottom: 5px; }
+    .small-input { max-width: 100%; }
+
+    .table-wrap table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      min-width: 560px;
+    }
+
+    .table-wrap th, .table-wrap td {
+      text-align: left;
+      padding: 13px 10px;
+      border-top: 1px solid var(--line);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .status {
+      padding: 5px 8px;
+      border-radius: 20px;
+      background: #edf8ef;
+      color: #177245;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    /* ============ PAYOUTS ============ */
+    .payout-hero {
+      background: var(--ink);
+      color: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin-bottom: 22px;
+    }
+
+    .payout-hero strong { display: block; font-size: 30px; margin: 8px 0; }
+    .payout-hero p { color: #aaa; font-size: 13px; }
+
+    .payout-account {
+      border-left: 0;
+      border-top: 1px solid #444;
+      padding: 20px 0 0;
+      min-width: 0;
+    }
+
+    .payout-account b { display: block; margin: 10px 0; font-size: 18px; }
+    .payout-account small { color: #aaa; }
+
+    .payout-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      padding: 15px 0;
+      border-top: 1px solid var(--line);
+      align-items: center;
+    }
+
+    .payout-row:first-child { border-top: 0; }
+    .payout-row small { color: #888; display: block; font-size: 12px; margin-top: 3px; }
+
+    /* ============ AUTH ============ */
+    .auth-body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 80px 20px 40px;
+      position: relative;
+    }
+
+    .auth-brand {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 430px;
+      background: #fff;
+      border: 1px solid var(--line);
+      padding: 28px 22px;
+      border-radius: 18px;
+    }
+
+    .auth-card h1 { font-size: 26px; margin: 8px 0; line-height: 1.15; }
+    .auth-card > p { color: #777; line-height: 1.6; font-size: 14px; }
+
+    .auth-card form {
+      display: grid;
+      gap: 14px;
+      margin-top: 22px;
+    }
+
+    .auth-card label { font-size: 13px; font-weight: 600; }
+    .auth-card label .input { margin-top: 7px; }
+
+    .auth-divider {
+      text-align: center;
+      border-top: 1px solid var(--line);
+      margin: 22px 0;
+      padding-top: 18px;
+      color: #999;
+      font-size: 11px;
+    }
+
+    .center { text-align: center; }
+
+    /* ============ MISC ============ */
+    .toast {
+      position: fixed;
+      left: 16px;
+      right: 16px;
+      bottom: 16px;
+      background: #111;
+      color: #fff;
+      padding: 14px 18px;
+      border-radius: 10px;
+      z-index: 999;
+      font-size: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      animation: toastIn 0.25s ease;
+      text-align: center;
+    }
+
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .page-section { display: none; }
+    .page-section.active { display: block; }
+
+    /* ============ CHECKOUT ============ */
+    .checkout-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .ticket-tier {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 15px 16px;
+      cursor: pointer;
+      background: #fff;
+      transition: 0.15s;
+      margin-bottom: 10px;
+      gap: 12px;
+    }
+
+    .ticket-tier:active { border-color: #999; }
+    .ticket-tier.selected {
+      border-color: var(--ink);
+      box-shadow: 0 0 0 1px var(--ink);
+    }
+
+    .ticket-tier .tier-info h4 { margin: 0 0 4px; font-size: 15px; }
+    .ticket-tier .tier-info p { margin: 0; color: #777; font-size: 12px; }
+    .ticket-tier .tier-price { font-weight: 700; font-size: 16px; white-space: nowrap; }
+
+    .tier-qty {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+      flex-wrap: wrap;
+    }
+
+    .qty-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #fff;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 18px;
+      line-height: 1;
+      display: grid;
+      place-items: center;
+    }
+
+    .qty-btn:active { background: var(--soft); }
+
+    .qty-val {
+      min-width: 32px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .order-summary {
+      position: static;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      padding: 20px;
+    }
+
+    .order-summary h3 { margin: 0 0 16px; font-size: 18px; }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      padding: 8px 0;
+      color: #555;
+      gap: 12px;
+    }
+
+    .summary-row.total {
+      border-top: 1px solid var(--line);
+      margin-top: 10px;
+      padding-top: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .summary-row.fee { color: #888; font-size: 12px; }
+
+    .payment-methods {
+      display: grid;
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .pay-opt {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #fff;
+      font-size: 15px;
+      min-height: 56px;
+      font-weight: 600;
+    }
+
+    .pay-opt:active { background: var(--soft); }
+    .pay-opt.selected {
+      border-color: var(--ink);
+      box-shadow: 0 0 0 1px var(--ink);
+    }
+
+    .pay-opt input { accent-color: var(--ink); width: 18px; height: 18px; }
+
+    .pay-opt-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: var(--soft);
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .pay-opt-detail {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .pay-opt-detail small {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    .checkout-badge {
+      background: var(--accent);
+      color: var(--ink);
+      padding: 4px 9px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    .step-indicator {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 22px;
+      align-items: center;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      scrollbar-width: none;
+    }
+
+    .step-indicator::-webkit-scrollbar { display: none; }
+
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #999;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .step.active { color: var(--ink); font-weight: 600; }
+
+    .step-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #eee;
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #666;
+      flex-shrink: 0;
+    }
+
+    .step.active .step-num { background: var(--ink); color: #fff; }
+
+    .step-line { flex: 0 0 16px; height: 1px; background: var(--line); }
+
+    /* ============ TIER LIST ============ */
+    .tier-item {
+      padding: 14px;
+      border: 1px solid #e8e6e2;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      background: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    /* ============ MODAL ============ */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 16px;
+    }
+
+    .modal-box {
+      background: white;
+      border-radius: 14px;
+      padding: 24px 20px;
+      max-width: 500px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    /* ============ SMALL PHONES ============ */
+    @media (min-width: 600px) and (max-width: 899px) {
+      .event-grid.category-cascade > .event-category-group > .event-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 599px) {
+      .event-grid {
+        display: block;
+        margin-top: 16px;
+      }
+
+      .filters .filter-clear {
+        display: inline-flex;
+        width: 100%;
+      }
+
+      .event-category-group > .event-grid {
+        display: block;
+        margin-top: 0;
+      }
+
+      .event-grid.category-cascade {
+        display: block;
+      }
+
+      .event-category-group {
+        display: block;
+        margin: 0 0 26px;
+      }
+
+      .event-category-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin: 0 0 12px;
+        padding: 0 2px;
+      }
+
+      .event-category-heading h2 {
+        margin: 0;
+        font-size: 17px;
+      }
+
+      .event-category-heading small {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .event-category-heading .category-heading-left {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+
+      .event-category-group .event-card {
+        margin-bottom: 14px;
+      }
+
+      .event-category-group .event-card:last-child {
+        margin-bottom: 0;
+      }
+
+      .event-art { height: 128px; }
+      .event-body { padding: 14px; }
+      .event-body h3 { font-size: 17px; }
+      .event-bottom {
+        align-items: stretch;
+        margin-top: 14px;
+      }
+      .event-bottom .event-price {
+        display: flex;
+        align-items: center;
+      }
+      .event-bottom .btn {
+        flex: 1;
+        width: auto;
+      }
+    }
+
+      .site-header { padding-left: 12px; padding-right: 8px; }
+      .brand { font-size: 17px; }
+      .brand-mark { width: 30px; height: 30px; }
+      .hero { padding: 28px 16px 34px; gap: 24px; }
+      .hero h1 { font-size: clamp(32px, 11vw, 48px); }
+      .hero p { font-size: 14px; }
+      .hero-actions { align-items: stretch; }
+      .hero-actions .btn { width: 100%; }
+      .hero-actions .text-link { width: 100%; text-align: center; padding: 8px; }
+      .hero-card { padding: 18px; border-radius: 16px; }
+      .hero-card h3 { font-size: 22px; margin-top: 18px; }
+      .section, .page { padding-left: 16px; padding-right: 16px; }
+      .section { padding-top: 16px; padding-bottom: 16px; }
+      .page { padding-top: 24px; padding-bottom: 60px; }
+      .page-title h1 { font-size: clamp(27px, 8vw, 38px); }
+      .page-title > .btn, .page-title > button { width: 100%; }
+      .panel { padding: 16px; }
+      .panel-head { align-items: flex-start; }
+      .filters .input, .filters select { min-width: 0; }
+      .event-art { height: 170px; }
+      .event-bottom { align-items: stretch; }
+      .event-bottom .btn { width: 100%; }
+      .ticket-card { padding: 15px; }
+      .ticket-actions { display: grid; grid-template-columns: 1fr 1fr; }
+      .ticket-actions .btn { min-width: 0; width: 100%; }
+      .ticket-info { padding: 18px 0; }
+      .ticket-head { padding: 18px; }
+      .ticket-foot { padding: 16px 18px; }
+      .ticket-foot .btn { width: 100%; }
+      .ticket-sheet { border-radius: 14px; }
+      .stats { grid-template-columns: 1fr 1fr; gap: 9px; }
+      .stats > div { padding: 13px; min-width: 0; }
+      .stats strong { font-size: 18px; overflow-wrap: anywhere; }
+      .stats small { line-height: 1.4; }
+      .sales-list > div { align-items: flex-start; }
+      .payout-hero { padding: 18px; }
+      .payout-hero strong { font-size: 26px; overflow-wrap: anywhere; }
+      .checkout-badge { flex-shrink: 0; }
+      .ticket-tier { align-items: flex-start; }
+      .ticket-tier .tier-info { min-width: 0; }
+      .ticket-tier .tier-price { font-size: 15px; }
+      .tier-item { align-items: flex-start; }
+      .tier-item .btn { flex-shrink: 0; }
+      .auth-body { padding: 76px 16px 28px; }
+      .auth-brand { left: 16px; }
+      .auth-card { padding: 22px 18px; border-radius: 15px; }
+      .auth-card h1 { font-size: 25px; }
+      .modal-backdrop { padding: 10px; }
+      .modal-box { max-height: 90vh; padding: 20px 16px; }
+      .toast { left: 12px; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); }
+      .table-wrap { margin-left: -16px; margin-right: -16px; padding-left: 16px; padding-right: 16px; }
+      .table-wrap table { min-width: 560px; }
+      .form-actions { gap: 8px; }
+      .form-actions .btn { min-height: 48px; }
+      .mobile-drawer { padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+    }
+
+    /* ============ TABLET & UP ============ */
+    @media (min-width: 600px) {
+      .event-grid { grid-template-columns: repeat(2, 1fr); }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .ticket-info { grid-template-columns: 1fr 1fr; }
+      .form-grid { grid-template-columns: 1fr 1fr; }
+      .span-2 { grid-column: span 2; }
+      .form-actions { flex-direction: row; }
+      .form-actions .btn { width: auto; }
+      .ticket-foot { flex-direction: row; justify-content: space-between; align-items: center; }
+      .ticket-foot .btn { width: auto; }
+      .ticket-actions .btn { flex: 0 0 auto; }
+      .ticket-card { grid-template-columns: 1fr auto; }
+      .org-event { grid-template-columns: 1fr auto; }
+      .payout-hero { flex-direction: row; justify-content: space-between; }
+      .payout-account { border-left: 1px solid #444; border-top: 0; padding: 0 0 0 30px; }
+      .filters { flex-direction: row; }
+      .filters .input:first-child { max-width: 560px; }
+      .filters select { max-width: 200px; }
+      .small-input { max-width: 220px; }
+      .toast { left: auto; right: 20px; bottom: 20px; min-width: 240px; text-align: left; }
+      .table-wrap { margin: 0; padding: 0; }
+    }
+
+    /* ============ DESKTOP ============ */
+    @media (min-width: 900px) {
+      .event-grid.category-cascade > .event-category-group { margin-bottom: 28px; }
+      .event-grid.category-cascade > .event-category-group > .event-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    @media (min-width: 900px) {
+      :root { --header-h: 76px; }
+      .site-header { padding: 0 5vw; gap: 35px; }
+      .brand { font-size: 21px; }
+      .brand-mark { width: 32px; height: 32px; border-radius: 10px; }
+      .site-header nav { display: flex; }
+      .header-actions { display: flex; }
+      .menu-toggle { display: none; }
+      .mobile-drawer { display: none !important; }
+
+      .hero {
+        padding: 100px 30px 90px;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 90px;
+      }
+      .hero-card { transform: rotate(1deg); padding: 28px; }
+      .hero-card h3 { font-size: 28px; }
+
+      .section { padding: 30px; }
+      .feature-strip {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 45px;
+        padding: 55px 30px;
+        margin: 70px auto;
+      }
+      .event-grid { grid-template-columns: repeat(3, 1fr); gap: 18px; }
+
+      .page { padding: 60px 30px 100px; }
+      .page-title { flex-direction: row; align-items: flex-end; margin-bottom: 35px; }
+
+      .footer { flex-direction: row; justify-content: space-between; padding: 35px 5vw; text-align: left; }
+
+      .stats { grid-template-columns: repeat(4, 1fr); gap: 15px; }
+      .stats strong { font-size: 25px; }
+
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1.55fr 0.9fr;
+        gap: 20px;
+      }
+
+      .checkout-layout {
+        grid-template-columns: 1.4fr 0.9fr;
+        gap: 25px;
+      }
+
+      .order-summary { position: sticky; top: 100px; padding: 24px; }
+
+      .auth-body { padding: 30px; }
+      .auth-brand { top: 30px; left: 5vw; }
+      .auth-card { padding: 38px; }
+      .auth-card h1 { font-size: 32px; }
+
+      .step-indicator { gap: 20px; overflow: visible; }
+      .step-line { flex: 0 0 30px; }
+
+      .modal-box { padding: 30px; }
+
+      .tier-item { padding: 15px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+      .event-card:hover { transform: none; }
+    }
+  
+    /* ============ IOS APP SHELL ============ */
+    body { padding-bottom: env(safe-area-inset-bottom); }
+    .ios-tabbar {
+      display: none;
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      z-index: 110;
+      min-height: calc(64px + env(safe-area-inset-bottom));
+      padding: 7px 8px max(7px, env(safe-area-inset-bottom));
+      background: rgba(255,255,255,.94);
+      border-top: 1px solid var(--line);
+      backdrop-filter: blur(20px) saturate(150%);
+      -webkit-backdrop-filter: blur(20px) saturate(150%);
+      grid-template-columns: repeat(4,1fr);
+      gap: 4px;
+    }
+    .ios-tab {
+      border: 0; background: transparent; color: #777;
+      border-radius: 12px; min-width: 0; min-height: 48px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; font-size: 10px; font-weight: 600; cursor: pointer;
+    }
+    .ios-tab .icon { width: 21px; height: 21px; flex-basis: 21px; }
+    .ios-tab.active { color: var(--ink); background: var(--soft); }
+    .ios-tab:active { transform: scale(.96); }
+    .install-banner {
+      display:none; margin: 0 16px 16px; padding: 12px 14px;
+      border:1px solid var(--line); border-radius:14px; background:#fff;
+      align-items:center; gap:12px;
+    }
+    .install-banner .install-copy { flex:1; min-width:0; }
+    .install-banner strong { display:block; font-size:13px; }
+    .install-banner small { display:block; color:var(--muted); font-size:11px; margin-top:2px; }
+    .install-banner .btn { min-height:40px; padding:9px 12px; }
+    .ios-page-actions { padding-bottom: 8px; }
+    @media (max-width:599px) {
+      body { padding-bottom: calc(70px + env(safe-area-inset-bottom)); }
+      .ios-tabbar { display:grid; }
+      .site-header { position:sticky; padding-top: env(safe-area-inset-top); height:calc(var(--header-h) + env(safe-area-inset-top)); }
+      .mobile-drawer { top:calc(var(--header-h) + env(safe-area-inset-top)); padding-bottom:calc(84px + env(safe-area-inset-bottom)); }
+      .page { padding-bottom: 76px; }
+      .footer { padding-bottom: 88px; }
+      .install-banner { display:flex; }
+      .hero { padding-top:24px; }
+      .section-head { align-items:center; }
+      .section-head .text-link { white-space:nowrap; }
+    }
+    @media (min-width:600px) { .install-banner { display:none !important; } }
+
+  </style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header class="site-header">
+  <a class="brand" onclick="navigateTo('home')"><span class="brand-mark">P</span> Passly</a>
+  <nav id="siteNav">
+    <a onclick="navigateTo('events')">Find Events</a>
+    <a onclick="navigateTo('attendee')" style="display:none;" class="nav-attendee">My Tickets</a>
+    <a onclick="navigateTo('organizer')" style="display:none;" class="nav-organizer">Organizer</a>
+  </nav>
+  <div class="header-actions" id="headerActions">
+    <a class="btn btn-ghost" onclick="navigateTo('login')">Log in</a>
+    <a class="btn btn-dark" onclick="navigateTo('signup')">Get started</a>
+  </div>
+  <button class="menu-toggle" onclick="toggleMenu()" aria-label="Open menu" id="menuToggle"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</header>
+
+<!-- ============ MOBILE DRAWER ============ -->
+<div class="mobile-drawer" id="mobileDrawer">
+  <a onclick="navigateTo('home')">Home</a>
+  <a onclick="navigateTo('events')">Find Events</a>
+  <a onclick="navigateTo('attendee')" class="nav-attendee-mobile" style="display:none;">My Tickets</a>
+  <a onclick="navigateTo('organizer')" class="nav-organizer-mobile" style="display:none;">Organizer Dashboard</a>
+  <a onclick="navigateTo('payouts')" class="nav-organizer-mobile" style="display:none;">Payouts</a>
+  <a onclick="navigateTo('sales')" class="nav-organizer-mobile" style="display:none;">Sales</a>
+  <div id="mobileDrawerAuth"></div>
+</div>
+
+<main>
+<div class="install-banner" id="installBanner">
+  <div class="event-category-icon" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 7h6M9 17h6"/></svg></div>
+  <div class="install-copy"><strong>Install Passly</strong><small id="installHint">Use Passly like a mobile app.</small></div>
+  <button class="btn btn-dark" id="installButton" type="button">Install</button>
+</div>
+
+<!-- ============ HOME ============ -->
+<section id="page-home" class="page-section active">
+  <section class="hero">
+    <div class="hero-copy">
+      <span class="eyebrow">EVENTS • TICKETS • PAYOUTS</span>
+      <h1>Everything you need to <em>host</em> and attend great events.</h1>
+      <p>Create events, sell tickets, manage attendees and keep every ticket in one place.</p>
+      <div class="hero-actions">
+        <a class="btn btn-dark btn-lg" onclick="navigateTo('events')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Explore events</a>
+        <a class="text-link" onclick="navigateTo('create')">Create an event</a>
+      </div>
+    </div>
+    <div class="hero-card">
+      <div class="mini-top"><span>LIVE EVENT</span><span class="dot"></span></div>
+      <h3>Lusaka Tech Summit</h3>
+      <p>18 October 2026 · Mulungushi Conference Centre</p>
+      <div class="ticket-row"><span>General Admission</span><strong>K 50</strong></div>
+      <div class="ticket-row"><span>VIP</span><strong>K 120</strong></div>
+      <button class="btn btn-dark full" onclick="openCheckout('e1','General Admission')">Get tickets</button>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div><span class="eyebrow">BROWSE</span><h2>Popular events</h2></div>
+      <a class="text-link" onclick="navigateTo('events')">View all</a>
+    </div>
+    <div id="featuredEvents" class="event-grid"></div>
+  </section>
+
+  <section class="feature-strip">
+    <div><b>01</b><h3>Sell simply</h3><p>Build ticket types and publish an event in minutes.</p></div>
+    <div><b>02</b><h3>Know your numbers</h3><p>Track sales, fees and your applicable payout from one dashboard.</p></div>
+    <div><b>03</b><h3>Keep tickets handy</h3><p>Buyers get a personal ticket wallet with downloadable tickets.</p></div>
+  </section>
+</section>
+
+<!-- ============ EVENTS ============ -->
+<section id="page-events" class="page-section">
+  <div class="page">
+    <div class="page-title">
+      <div><span class="eyebrow">DISCOVER</span><h1>Find your next event.</h1><p>Browse events and reserve your spot.</p></div>
+      <a class="btn btn-dark" onclick="navigateTo('create')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Create event</a>
+    </div>
+    <div class="filters">
+      <input id="eventSearch" class="input" placeholder="Search events, venues or cities…" oninput="renderEvents()">
+      <select id="categoryFilter" class="input" onchange="renderEvents()">
+        <option value="">All categories</option>
+        <option>Technology</option><option>Music</option><option>Business</option><option>Community</option><option>General</option>
+      </select>
+      <button type="button" class="btn btn-ghost filter-clear" onclick="clearEventFilters()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M10 11v6M14 11v6M5 6l1 15h12l1-15"/></svg>Clear</button>
+    </div>
+    <div id="allEvents" class="event-grid"></div>
+  </div>
+</section>
+
+<!-- ============ EVENT DETAIL ============ -->
+<section id="page-event" class="page-section">
+  <div class="page" id="eventDetail"></div>
+</section>
+
+<!-- ============ CHECKOUT ============ -->
+<section id="page-checkout" class="page-section">
+  <div class="page">
+    <div class="step-indicator">
+      <div class="step"><span class="step-num">1</span> Choose</div>
+      <span class="step-line"></span>
+      <div class="step active"><span class="step-num">2</span> Checkout</div>
+      <span class="step-line"></span>
+      <div class="step"><span class="step-num">3</span> Confirm</div>
+    </div>
+    <div id="checkoutContent"></div>
+  </div>
+</section>
+
+<!-- ============ ATTENDEE ============ -->
+<section id="page-attendee" class="page-section">
+  <div class="page">
+    <div class="page-title">
+      <div><span class="eyebrow">ATTENDEE</span><h1>My tickets</h1><p>Your purchased tickets, ready whenever you need them.</p></div>
+    </div>
+    <div class="tabs">
+      <button class="tab active">Upcoming <span id="upcomingCount">3</span></button>
+      <button class="tab">Past <span>1</span></button>
+    </div>
+    <div id="ticketList" class="ticket-list"></div>
+  </div>
+</section>
+
+<!-- ============ TICKET VIEW ============ -->
+<section id="page-ticket" class="page-section">
+  <div class="page ticket-page" id="ticketView"></div>
+</section>
+
+<!-- ============ ORGANIZER ============ -->
+<section id="page-organizer" class="page-section">
+  <div class="page">
+    <div class="page-title">
+      <div><span class="eyebrow">ORGANIZER</span><h1 id="organizerGreeting">Good evening, Tapson.</h1><p>Here's how your events are performing.</p></div>
+      <a class="btn btn-dark" onclick="navigateTo('create')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Create event</a>
+    </div>
+    <div class="stats">
+      <div><span>Gross sales</span><strong>K 18,450</strong><small>+12.4% this month</small></div>
+      <div><span>Tickets sold</span><strong>347</strong><small>Across 4 events</small></div>
+      <div><span>Applicable payout</span><strong>K 17,140</strong><small>After platform & payment fees</small></div>
+      <div><span>Upcoming events</span><strong>4</strong><small>2 selling now</small></div>
+    </div>
+    <div class="dashboard-grid">
+      <section class="panel wide">
+        <div class="panel-head">
+          <div><h2>Your events</h2><p>Manage events you created.</p></div>
+          <a class="text-link" onclick="navigateTo('create')">New event</a>
+        </div>
+        <div id="organizerEvents"></div>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><div><h2>Recent sales</h2><p>Latest ticket activity.</p></div></div>
+        <div class="sales-list" id="recentSales"></div>
+      </section>
+    </div>
+    <div class="dashboard-grid" style="margin-top:20px;">
+      <section class="panel wide">
+        <div class="panel-head">
+          <div><h2>Transactions</h2></div>
+          <input class="input small-input" placeholder="Search buyer…">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Buyer</th><th>Ticket</th><th>Qty</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+            <tbody id="salesTable"></tbody>
+          </table>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><div><h2>Payout history</h2></div></div>
+        <div id="payoutList"></div>
+      </section>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CREATE EVENT ============ -->
+<section id="page-create" class="page-section">
+  <div class="page form-page">
+    <div class="page-title">
+      <div><span class="eyebrow">ORGANIZER</span><h1>Create an event</h1><p>Set up your event and ticket inventory.</p></div>
+      <a class="btn btn-ghost" onclick="navigateTo('organizer')">Cancel</a>
+    </div>
+    <form id="eventForm" class="form-layout">
+      <section class="panel">
+        <h2>Event details</h2>
+        <div class="form-grid">
+          <label class="span-2">Event name<input required name="name" class="input" placeholder="e.g. Lusaka Tech Summit"></label>
+          <label>Category<select required name="category" class="input"><option value="Technology">Technology</option><option value="Music">Music</option><option value="Business">Business</option><option value="Community">Community</option><option value="General">General</option></select></label>
+          <label class="span-2">Description<textarea name="description" class="input" rows="4" placeholder="Tell people what this event is about…"></textarea></label>
+          <label>Venue<input required name="venue" class="input" placeholder="Venue name"></label>
+          <label>City<input required name="city" class="input" placeholder="Lusaka"></label>
+          <label>Date<input required name="date" type="date" class="input"></label>
+          <label>Start time<input required name="time" type="time" class="input"></label>
+        </div>
+      </section>
+      <section class="panel">
+        <div style="margin-bottom:18px;">
+          <h2>Ticket tiers</h2>
+          <p style="color:#737373;margin:8px 0 0 0;font-size:14px;">Create multiple ticket tiers for your event.</p>
+        </div>
+        <div id="ticketTiersList" style="margin-bottom:20px;"></div>
+        <div style="padding:16px;border:1px dashed #e8e6e2;border-radius:10px;background:#fafaf9;margin-bottom:20px;">
+          <div class="form-grid" style="gap:12px;">
+            <label class="span-2">Tier name<input id="tierName" class="input" placeholder="e.g. General Admission"></label>
+            <label>Price (K)<input id="tierPrice" type="number" class="input" placeholder="50" value="50" inputmode="numeric"></label>
+            <label>Quantity<input id="tierQuantity" type="number" class="input" placeholder="100" value="100" inputmode="numeric"></label>
+            <label class="span-2">Description<input id="tierDesc" class="input" placeholder="e.g. Standard entry"></label>
+          </div>
+          <button type="button" class="btn btn-ghost full" onclick="addTicketTier()" style="margin-top:12px;"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add ticket tier</button>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-dark btn-lg">Publish event</button>
+          <a onclick="navigateTo('organizer')" class="btn btn-ghost btn-lg">Save draft</a>
+        </div>
+      </section>
+    </form>
+  </div>
+</section>
+
+<!-- ============ PAYOUTS ============ -->
+<section id="page-payouts" class="page-section">
+  <div class="page">
+    <div class="page-title">
+      <div><span class="eyebrow">PAYOUTS</span><h1>Your payouts</h1><p>Track what has been paid and what is available.</p></div>
+      <button class="btn btn-dark" onclick="toast('Payout request submitted in demo mode')">Request payout</button>
+    </div>
+    <div class="payout-hero">
+      <div><span>Available for payout</span><strong>K 3,250.00</strong><p>Next scheduled payout · 21 October 2026</p></div>
+      <div class="payout-account">
+        <span>Bank account</span><b>•••• 4821</b><small>MTN / Zanaco settlement account</small>
+      </div>
+    </div>
+    <section class="panel">
+      <div class="panel-head"><div><h2>Payout history</h2><p>Your recent settlements.</p></div></div>
+      <div id="payoutListFull"></div>
+    </section>
+  </div>
+</section>
+
+<!-- ============ SALES ============ -->
+<section id="page-sales" class="page-section">
+  <div class="page">
+    <div class="page-title">
+      <div><span class="eyebrow">SALES</span><h1>Ticket sales</h1><p>See sales and attendee transactions for your event.</p></div>
+      <button class="btn btn-dark" onclick="toast('CSV export prepared in demo mode')">Export CSV</button>
+    </div>
+    <div class="stats">
+      <div><span>Tickets sold</span><strong>182</strong><small>72.8% of inventory</small></div>
+      <div><span>Gross sales</span><strong>K 9,100</strong><small>Before fees</small></div>
+      <div><span>Fees</span><strong>K 455</strong><small>5% platform fee</small></div>
+      <div><span>Applicable payout</span><strong>K 8,645</strong><small>Next payout: 21 Oct</small></div>
+    </div>
+    <section class="panel table-panel">
+      <div class="panel-head">
+        <div><h2>Transactions</h2></div>
+        <input class="input small-input" placeholder="Search buyer…">
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Buyer</th><th>Ticket</th><th>Qty</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+          <tbody id="salesTableFull"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</section>
+
+<!-- ============ LOGIN ============ -->
+<section id="page-login" class="page-section">
+  <div class="auth-body">
+    <a class="brand auth-brand" onclick="navigateTo('home')"><span class="brand-mark">P</span> Passly</a>
+    <main class="auth-card">
+      <span class="eyebrow">WELCOME BACK</span>
+      <h1>Log in to Passly</h1>
+      <p>Choose your login type to continue.</p>
+      
+      <div style="display:grid;grid-template-columns:1fr;gap:12px;margin:22px 0;">
+        <button class="btn btn-dark" style="padding:16px;" onclick="navigateTo('login-attendee')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16v13H4z"/><path d="M8 7V5h8v2"/><path d="M8 12h8"/></svg>Attendee Login</button>
+        <button class="btn btn-ghost" style="padding:16px;" onclick="navigateTo('login-organizer')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16v13H4z"/><path d="M8 7V5h8v2"/><path d="M8 12h8"/></svg>Organizer Login</button>
+      </div>
+      
+      <div class="auth-divider">Or create an account</div>
+      <p class="center"><a onclick="navigateTo('signup')">Create a new account</a></p>
+    </main>
+  </div>
+</section>
+
+<!-- ============ ATTENDEE LOGIN ============ -->
+<section id="page-login-attendee" class="page-section">
+  <div class="auth-body">
+    <a class="brand auth-brand" onclick="navigateTo('home')"><span class="brand-mark">P</span> Passly</a>
+    <main class="auth-card">
+      <span class="eyebrow">ATTENDEE</span>
+      <h1>Log in to your tickets</h1>
+      <p>Access your ticket wallet and event details.</p>
+      <form id="loginAttendeeForm" onsubmit="handleAttendeeLogin(event)">
+        <label>Email<input id="attendeeEmail" required type="email" class="input" placeholder="you@example.com" autocomplete="email"></label>
+        <label>Password<input id="attendeePassword" required type="password" class="input" placeholder="••••••••" autocomplete="current-password"></label>
+        <button type="submit" class="btn btn-dark full btn-lg">Log in as Attendee</button>
+      </form>
+      <div class="auth-divider">Demo frontend · no real authentication</div>
+      <p class="center"><a onclick="navigateTo('login')">Back to login options</a> · <a onclick="navigateTo('signup')">Create account</a></p>
+    </main>
+  </div>
+</section>
+
+<!-- ============ ORGANIZER LOGIN ============ -->
+<section id="page-login-organizer" class="page-section">
+  <div class="auth-body">
+    <a class="brand auth-brand" onclick="navigateTo('home')"><span class="brand-mark">P</span> Passly</a>
+    <main class="auth-card">
+      <span class="eyebrow">ORGANIZER</span>
+      <h1>Log in to your dashboard</h1>
+      <p>Manage events, sales, and payouts.</p>
+      <form id="loginOrganizerForm" onsubmit="handleOrganizerLogin(event)">
+        <label>Email<input id="organizerEmail" required type="email" class="input" placeholder="you@example.com" autocomplete="email"></label>
+        <label>Password<input id="organizerPassword" required type="password" class="input" placeholder="••••••••" autocomplete="current-password"></label>
+        <button type="submit" class="btn btn-dark full btn-lg">Log in as Organizer</button>
+      </form>
+      <div class="auth-divider">Demo frontend · no real authentication</div>
+      <p class="center"><a onclick="navigateTo('login')">Back to login options</a> · <a onclick="navigateTo('signup')">Create account</a></p>
+    </main>
+  </div>
+</section>
+
+<!-- ============ SIGNUP ============ -->
+<section id="page-signup" class="page-section">
+  <div class="auth-body">
+    <a class="brand auth-brand" onclick="navigateTo('home')"><span class="brand-mark">P</span> Passly</a>
+    <main class="auth-card">
+      <span class="eyebrow">GET STARTED</span>
+      <h1>Create your account</h1>
+      <p>Choose your account type to begin.</p>
+      
+      <div style="display:grid;gap:12px;margin:20px 0;">
+        <label style="margin:0;padding:14px;border:1px solid var(--line);border-radius:10px;cursor:pointer;">
+          <input type="radio" id="typeAttendee" name="accountType" value="attendee" checked required>
+          <span style="margin-left:8px;font-weight:600;display:inline-flex;align-items:center;gap:8px;"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16v13H4z"/><path d="M8 7V5h8v2"/></svg>Attendee Account</span>
+          <div style="font-size:12px;color:#777;margin-left:24px;margin-top:4px;">Buy and manage tickets</div>
+        </label>
+        <label style="margin:0;padding:14px;border:1px solid var(--line);border-radius:10px;cursor:pointer;">
+          <input type="radio" id="typeOrganizer" name="accountType" value="organizer" required>
+          <span style="margin-left:8px;font-weight:600;display:inline-flex;align-items:center;gap:8px;"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16v13H4z"/><path d="M8 7V5h8v2"/></svg>Organizer Account</span>
+          <div style="font-size:12px;color:#777;margin-left:24px;margin-top:4px;">Create events and manage sales</div>
+        </label>
+      </div>
+      
+      <form id="signupForm" onsubmit="handleSignup(event)" style="margin-top:20px;">
+        <label>Full name<input id="signupName" required class="input" placeholder="Your name" autocomplete="name"></label>
+        <label>Email<input id="signupEmail" required type="email" class="input" placeholder="you@example.com" autocomplete="email"></label>
+        <label>Password<input id="signupPassword" required type="password" class="input" placeholder="Create a password" autocomplete="new-password"></label>
+        <button type="submit" class="btn btn-dark full btn-lg">Create account</button>
+      </form>
+      <div class="auth-divider">Demo account created locally · no real account is created</div>
+      <p class="center">Already have an account? <a onclick="navigateTo('login')">Log in</a></p>
+    </main>
+  </div>
+</section>
+
+</main>
+
+<nav class="ios-tabbar" id="iosTabbar" aria-label="App navigation">
+  <button class="ios-tab" data-tab-route="home" onclick="navigateTo('home')" type="button">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 10.5 12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-5v-6h-5v6h-5A1.5 1.5 0 0 1 3 19.5z"/></svg><span>Home</span>
+  </button>
+  <button class="ios-tab" data-tab-route="events" onclick="navigateTo('events')" type="button">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M7 14h3M7 18h6"/></svg><span>Events</span>
+  </button>
+  <button class="ios-tab" data-tab-route="tickets" onclick="navigateTo('tickets')" type="button">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v2a2.5 2.5 0 0 0 0 5v2a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 15.5v-2a2.5 2.5 0 0 0 0-5z"/><path d="M9 8v8M13 8v8"/></svg><span id="tabThirdLabel">Tickets</span>
+  </button>
+  <button class="ios-tab" data-tab-route="account" onclick="navigateTo('account')" type="button">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c.8-3.6 3.2-5.5 7.5-5.5s6.7 1.9 7.5 5.5"/></svg><span>Account</span>
+  </button>
+</nav>
+
+<footer class="footer">
+  <span>© 2026 Passly</span>
+  <span>Simple ticketing for modern events.</span>
+</footer>
+
+<script>
+/* =========================================================
+   DATA
+   ========================================================= */
+let authState = {
+  isLoggedIn: false,
+  user: null,
+  userType: null
+};
+
+let eventTicketTiers = [];
+
+const demoEvents = [
+  {id:"e1",name:"Lusaka Tech Summit",category:"Technology",date:"18 October 2026",iso:"2026-10-18",time:"09:00",venue:"Mulungushi Conference Centre",city:"Lusaka",price:50,capacity:250,sold:182,owner:true,desc:"A full-day gathering for builders, founders and technology leaders shaping the next chapter of Zambia.",art:"TECH"},
+  {id:"e2",name:"Afrobeat Nights",category:"Music",date:"24 October 2026",iso:"2026-10-24",time:"18:00",venue:"Levy Junction Mall",city:"Lusaka",price:80,capacity:600,sold:421,owner:false,desc:"An evening of live Afrobeat, DJs and local talent.",art:"MUSIC"},
+  {id:"e3",name:"Zambia Business Forum",category:"Business",date:"2 November 2026",iso:"2026-11-02",time:"08:30",venue:"Taj Pamodzi",city:"Lusaka",price:120,capacity:180,sold:96,owner:true,desc:"Business leaders and entrepreneurs connecting, learning and building partnerships.",art:"BUSINESS"},
+  {id:"e4",name:"Creative Market Day",category:"Community",date:"8 November 2026",iso:"2026-11-08",time:"10:00",venue:"EastPark",city:"Lusaka",price:25,capacity:400,sold:260,owner:false,desc:"A relaxed day for makers, artists, designers and independent brands.",art:"CREATE"}
+];
+
+const demoTickets = [
+  {id:"TS-28491",eventId:"e1",type:"General Admission",buyer:"Tapson Kay",price:50,status:"Confirmed"},
+  {id:"TS-28507",eventId:"e3",type:"Business Pass",buyer:"Tapson Kay",price:120,status:"Confirmed"},
+  {id:"TS-28531",eventId:"e2",type:"Standard",buyer:"Tapson Kay",price:80,status:"Confirmed"}
+];
+
+const sales = [
+  ["Chanda M.","General Admission",2,"K 100","Confirmed","02 Oct 2026"],
+  ["Brian K.","General Admission",1,"K 50","Confirmed","02 Oct 2026"],
+  ["Martha Z.","VIP",1,"K 120","Confirmed","01 Oct 2026"],
+  ["Lombe P.","General Admission",3,"K 150","Confirmed","01 Oct 2026"],
+  ["Moses T.","General Admission",1,"K 50","Confirmed","30 Sep 2026"]
+];
+
+const payouts = [
+  ["21 Sep 2026","K 5,840.00","Paid"],
+  ["21 Aug 2026","K 4,210.00","Paid"],
+  ["21 Jul 2026","K 2,980.00","Paid"],
+  ["21 Jun 2026","K 3,760.00","Paid"]
+];
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+function $(s){return document.querySelector(s)}
+function $$(s){return document.querySelectorAll(s)}
+function eventById(id){return demoEvents.find(e=>e.id===id)}
+function money(n){return "K "+Number(n).toLocaleString()}
+
+function toast(msg){
+  let t=document.createElement("div");
+  t.className="toast";
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2200);
+}
+
+function toggleMenu(){
+  const drawer = $("#mobileDrawer");
+  if(!drawer) return;
+  drawer.classList.toggle("open");
+  document.body.style.overflow = drawer.classList.contains("open") ? "hidden" : "";
+}
+
+function closeMenu(){
+  const drawer = $("#mobileDrawer");
+  if(drawer) drawer.classList.remove("open");
+  document.body.style.overflow = "";
+}
+
+/* =========================================================
+   TICKET TIERS PER EVENT
+   ========================================================= */
+function ticketTiersFor(eventId){
+  const event = eventById(eventId);
+  
+  if(event && event.tiers && event.tiers.length > 0){
+    return event.tiers.map(t => ({
+      name: t.name,
+      price: t.price,
+      desc: t.description || "Ticket tier"
+    }));
+  }
+  
+  const base = event?.price || 50;
+  return [
+    {name:"General Admission", desc:"Standard entry to all main sessions.", price: base},
+    {name:"VIP", desc:"Priority seating, refreshments & lounge access.", price: base + 70},
+    {name:"Student", desc:"Valid student ID required at entrance.", price: Math.max(10, Math.round(base * 0.5))}
+  ];
+}
+
+/* =========================================================
+   CHECKOUT STATE
+   ========================================================= */
+let checkoutState = {
+  eventId: null,
+  tierIndex: 0,
+  quantity: 1,
+  payment: "mobile"
+};
+
+function openCheckout(eventId, tierName){
+  if(!authState.isLoggedIn){
+    toast("Please log in to purchase tickets");
+    navigateTo("login");
+    return;
+  }
+  
+  let e = eventById(eventId);
+  if(!e) return;
+  let tiers = ticketTiersFor(eventId);
+  let idx = tiers.findIndex(t => t.name === tierName);
+  checkoutState = {
+    eventId,
+    tierIndex: idx >= 0 ? idx : 0,
+    quantity: 1,
+    payment: "mobile"
+  };
+  navigateTo("checkout");
+  renderCheckout();
+}
+
+function setTier(i){
+  checkoutState.tierIndex = i;
+  renderCheckout();
+}
+
+function changeQty(delta){
+  checkoutState.quantity = Math.max(1, Math.min(10, checkoutState.quantity + delta));
+  renderCheckout();
+}
+
+function setPayment(method){
+  checkoutState.payment = method;
+  renderCheckout();
+}
+
+/* =========================================================
+   RENDER: CHECKOUT
+   ========================================================= */
+function renderCheckout(){
+  const box = $("#checkoutContent");
+  if(!box) return;
+
+  const e = eventById(checkoutState.eventId);
+  if(!e){
+    box.innerHTML = `<div class="panel"><h2>No event selected</h2><p>Please choose an event to check out.</p><a class="btn btn-dark" onclick="navigateTo('events')">Browse events</a></div>`;
+    return;
+  }
+
+  const tiers = ticketTiersFor(e.id);
+  const tier = tiers[checkoutState.tierIndex];
+  const qty = checkoutState.quantity;
+  const subtotal = tier.price * qty;
+  const fee = Math.round(subtotal * 0.05);
+  const total = subtotal + fee;
+
+  box.innerHTML = `
+    <div class="page-title" style="margin-bottom:22px;">
+      <div>
+        <span class="eyebrow">CHECKOUT · ${e.category}</span>
+        <h1>${e.name}</h1>
+        <p>${e.date} · ${e.time} · ${e.venue}, ${e.city}</p>
+      </div>
+      <a class="btn btn-ghost" onclick="showEventDetail('${e.id}')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>Back to event</a>
+    </div>
+
+    <div class="checkout-layout">
+      <div>
+        <section class="panel">
+          <div class="panel-head" style="margin-bottom:10px;">
+            <div><h2 style="margin:0;">Select tickets</h2></div>
+            <span class="checkout-badge">SECURE</span>
+          </div>
+          ${tiers.map((t,i)=>`
+            <div class="ticket-tier ${i===checkoutState.tierIndex?'selected':''}" onclick="setTier(${i})">
+              <div class="tier-info">
+                <h4>${t.name}</h4>
+                <p>${t.desc}</p>
+              </div>
+              <div class="tier-price">${money(t.price)}</div>
+            </div>
+          `).join("")}
+          <div class="tier-qty">
+            <button type="button" class="qty-btn" onclick="changeQty(-1)" aria-label="Decrease quantity">−</button>
+            <span class="qty-val">${qty}</span>
+            <button type="button" class="qty-btn" onclick="changeQty(1)" aria-label="Increase quantity">+</button>
+            <span style="color:#888;font-size:13px;">ticket${qty>1?"s":""} · max 10</span>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2 style="margin-top:0;">Payment method</h2>
+          <div class="payment-methods">
+            <label class="pay-opt selected" onclick="setPayment('mobile')">
+              <input type="radio" name="pay" checked>
+              <span class="pay-opt-icon">📱</span>
+              <span class="pay-opt-detail">
+                <span>Mobile Money</span>
+                <small>MTN · Airtel · Zamtel</small>
+              </span>
+            </label>
+          </div>
+
+          <div class="form-grid" style="margin-top:10px;">
+            <label class="span-2">Full name<input class="input" placeholder="Your full name" value="${authState.user?.name || ''}"></label>
+            <label class="span-2">Email<input class="input" type="email" placeholder="you@example.com" value="${authState.user?.email || ''}"></label>
+            <label class="span-2">Mobile money number<input class="input" placeholder="+260 97 …" inputmode="tel"></label>
+            <label class="span-2">Promo code<input class="input" placeholder="Optional"></label>
+          </div>
+
+          <div style="margin-top:16px;padding:14px;background:#fafaf9;border-radius:10px;border:1px solid var(--line);">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+              <span style="font-size:18px;">🔒</span>
+              <strong style="font-size:13px;">Secure mobile payment</strong>
+            </div>
+            <p style="margin:0;font-size:12px;color:var(--muted);line-height:1.6;">
+              You'll receive a prompt on your phone to approve this payment. No card details required.
+            </p>
+          </div>
+        </section>
+      </div>
+
+      <aside class="order-summary">
+        <h3>Order summary</h3>
+        <div class="summary-row"><span>Event</span><strong style="font-weight:600;text-align:right;">${e.name}</strong></div>
+        <div class="summary-row"><span>Date</span><span>${e.date}</span></div>
+        <div class="summary-row"><span>Ticket type</span><span>${tier.name}</span></div>
+        <div class="summary-row"><span>Quantity</span><span>${qty}</span></div>
+        <div class="summary-row"><span>Price each</span><span>${money(tier.price)}</span></div>
+        <div class="summary-row"><span>Subtotal</span><span>${money(subtotal)}</span></div>
+        <div class="summary-row fee"><span>Service fee (5%)</span><span>${money(fee)}</span></div>
+        <div class="summary-row total"><span>Total</span><span>${money(total)}</span></div>
+
+        <button type="button" class="btn btn-dark full btn-lg" style="margin-top:18px;" onclick="confirmPurchase()">
+          Confirm & pay ${money(total)}
+        </button>
+        <p style="font-size:11px;color:#999;text-align:center;margin-top:14px;line-height:1.5;">
+          By confirming you agree to Passly's terms.<br>Demo checkout — no real payment is processed.
+        </p>
+      </aside>
+    </div>
+  `;
+}
+
+/* =========================================================
+   CONFIRM PURCHASE
+   ========================================================= */
+function confirmPurchase(){
+  const e = eventById(checkoutState.eventId);
+  if(!e) return;
+  const tiers = ticketTiersFor(e.id);
+  const tier = tiers[checkoutState.tierIndex];
+  const qty = checkoutState.quantity;
+  const buyerName = authState.user?.name || "Tapson Kay";
+
+  for(let i=0;i<qty;i++){
+    demoTickets.unshift({
+      id: "TS-" + Math.floor(10000 + Math.random()*89999),
+      eventId: e.id,
+      type: tier.name,
+      buyer: buyerName,
+      price: tier.price,
+      status: "Confirmed"
+    });
+  }
+
+  e.sold = Math.min(e.capacity, e.sold + qty);
+  saveAppState();
+
+  toast(`${qty} ticket${qty>1?"s":""} purchased — added to My Tickets`);
+  renderTickets();
+  renderEvents();
+  renderFeatured();
+  renderOrganizer();
+  updateCounts();
+
+  const box = $("#checkoutContent");
+  if(box){
+    box.innerHTML = `
+      <div class="panel" style="text-align:center;padding:40px 20px;max-width:600px;margin:0 auto;">
+        <div style="width:60px;height:60px;border-radius:50%;background:var(--accent);display:grid;place-items:center;margin:0 auto 20px;font-size:26px;">✓</div>
+        <span class="eyebrow">PAYMENT CONFIRMED</span>
+        <h1 style="margin:10px 0;font-size:24px;">You're going to ${e.name}!</h1>
+        <p style="color:#777;line-height:1.7;">Your ${qty} × ${tier.name} ticket${qty>1?"s":""} for ${e.date} are now in your ticket wallet.</p>
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:22px;flex-direction:column;">
+          <a class="btn btn-dark btn-lg" onclick="navigateTo('attendee')">View my tickets</a>
+          <a class="btn btn-ghost btn-lg" onclick="navigateTo('events')">Browse more events</a>
+        </div>
+      </div>`;
+  }
+  setTimeout(()=>navigateTo("attendee"), 1400);
+}
+
+/* =========================================================
+   RENDER: EVENTS
+   ========================================================= */
+function categoryIcon(category, size="18") {
+  const c = String(category || "General").toLowerCase();
+  const paths = {
+    technology: '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 4V2M15 4V2M9 22v-2M15 22v-2M4 9H2M4 15H2M22 9h-2M22 15h-2"/><path d="M9 9h6v6H9z"/>',
+    music: '<path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/>',
+    business: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5h8v2M3 12h18M10 12v2h4v-2"/>',
+    community: '<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c.5-3.5 2.5-5 6-5s5.5 1.5 6 5M14 15c3-.3 5.5 1.2 6 4"/>',
+    general: '<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>'
+  };
+  const key = paths[c] ? c : "general";
+  return `<svg class="icon" style="width:${size}px;height:${size}px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[key]}</svg>`;
+}
+
+function card(e){
+  return `<article class="event-card" onclick="showEventDetail('${e.id}')">
+    <div class="event-art"><span>${e.art || e.category}</span></div>
+    <div class="event-body">
+      <span class="eyebrow" style="display:inline-flex;align-items:center;gap:5px;">${categoryIcon(e.category,14)}${e.category}</span>
+      <h3>${e.name}</h3>
+      <p>${e.date} · ${e.time}</p>
+      <p>${e.venue} · ${e.city}</p>
+      <div class="event-bottom">
+        <strong class="event-price">From ${money(e.price)}</strong>
+        <button type="button" class="btn btn-dark" onclick="event.stopPropagation();showEventDetail('${e.id}')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>View event</button>
+      </div>
+    </div>
+  </article>`;
+}
+
+function renderEvents(){
+  let box=$("#allEvents");
+  if(!box)return;
+  let q=($("#eventSearch")?.value||"").toLowerCase().trim();
+  let cat=$("#categoryFilter")?.value||"";
+  let data=demoEvents.filter(e=>
+    (!q||`${e.name} ${e.venue} ${e.city} ${e.category}`.toLowerCase().includes(q))&&
+    (!cat||e.category===cat)
+  );
+  if(!data.length){
+    box.classList.add("category-cascade");
+    box.innerHTML=`<div class="panel"><h3>No events found</h3><p>Try a different search or category.</p><button type="button" class="btn btn-ghost" onclick="clearEventFilters()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M10 11v6M14 11v6M5 6l1 15h12l1-15"/></svg>Clear filters</button></div>`;
+    return;
+  }
+
+  const groups = {};
+  data.forEach(e => (groups[e.category] ||= []).push(e));
+  box.classList.add("category-cascade");
+  box.innerHTML = Object.entries(groups).map(([category, events]) => `
+    <section class="event-category-group" data-category="${category}">
+      <div class="event-category-heading">
+        <div class="category-heading-left">
+          <span class="event-category-icon">${categoryIcon(category,18)}</span>
+          <div><h2>${category}</h2><small>${events.length} event${events.length === 1 ? "" : "s"}</small></div>
+        </div>
+        ${cat ? "" : `<small>${events.length > 1 ? "More to explore" : "Featured"}</small>`}
+      </div>
+      <div class="event-grid">${events.map(card).join("")}</div>
+    </section>`).join("");
+}
+
+function clearEventFilters(){
+  if($("#eventSearch")) $("#eventSearch").value="";
+  if($("#categoryFilter")) $("#categoryFilter").value="";
+  renderEvents();
+}
+
+function renderFeatured(){
+  let box=$("#featuredEvents");
+  if(box)box.innerHTML=demoEvents.slice(0,3).map(card).join("");
+}
+
+/* =========================================================
+   RENDER: EVENT DETAIL
+   ========================================================= */
+function showEventDetail(id){
+  let box=$("#eventDetail");
+  if(!box)return;
+  let e=eventById(id);
+  if(!e){box.innerHTML="<div class='panel'><h2>Event not found</h2></div>";navigateTo("event");return;}
+  let tiers = ticketTiersFor(id);
+  box.innerHTML=`
+    <div class="page-title">
+      <div>
+        <span class="eyebrow">${e.category}</span>
+        <h1>${e.name}</h1>
+        <p>${e.desc}</p>
+      </div>
+      <button class="btn btn-dark btn-lg" onclick="openCheckout('${e.id}','${tiers[0].name}')">Get tickets · from ${money(tiers[0].price)}</button>
+    </div>
+    <div class="dashboard-grid">
+      <section class="panel">
+        <h2>Event details</h2>
+        <div class="ticket-info">
+          <div><span>Date</span><strong>${e.date}</strong></div>
+          <div><span>Time</span><strong>${e.time}</strong></div>
+          <div><span>Venue</span><strong>${e.venue}</strong></div>
+          <div><span>Location</span><strong>${e.city}</strong></div>
+        </div>
+        <p style="margin-top:16px;">${e.desc}</p>
+      </section>
+      <section class="panel" id="ticketTypeSection">
+        <h2>Choose a ticket</h2>
+        ${tiers.map((t,i)=>`
+          <div class="ticket-row">
+            <div style="flex:1;">
+              <strong>${t.name}</strong>
+              <div style="font-size:12px;color:#888;margin-top:4px;">${t.desc}</div>
+            </div>
+            <div style="text-align:right;">
+              <strong style="display:block;">${money(t.price)}</strong>
+              <button type="button" class="btn btn-dark" style="margin-top:6px;padding:8px 12px;font-size:12px;min-height:auto;" onclick="openCheckout('${e.id}','${t.name}')">Select</button>
+            </div>
+          </div>
+        `).join("")}
+        <div class="ticket-row"><span>Remaining</span><strong>${e.capacity-e.sold}</strong></div>
+      </section>
+    </div>`;
+  navigateTo("event");
+}
+
+/* =========================================================
+   RENDER: TICKETS
+   ========================================================= */
+function renderTickets(){
+  let box=$("#ticketList");
+  if(!box)return;
+  box.innerHTML=demoTickets.map(t=>{
+    let e=eventById(t.eventId);
+    if(!e)return "";
+    return `<article class="ticket-card">
+      <div>
+        <span class="eyebrow">${t.status}</span>
+        <h3>${e.name}</h3>
+        <div class="ticket-meta">
+          <span>${e.date}</span><span>${e.venue}</span>
+          <span>${t.type}</span><span>#${t.id}</span>
+        </div>
+      </div>
+      <div class="ticket-actions">
+        <button type="button" class="btn btn-ghost" onclick="showTicketView('${t.id}')">View</button>
+        <button type="button" class="btn btn-dark" onclick="downloadTicket('${t.id}')">Download</button>
+      </div>
+    </article>`;
+  }).join("");
+  updateCounts();
+}
+
+function updateCounts(){
+  const el = $("#upcomingCount");
+  if(el) el.textContent = demoTickets.length;
+}
+
+function showTicketView(id){
+  let box=$("#ticketView");
+  if(!box)return;
+  let t=demoTickets.find(tk=>tk.id===id);
+  if(!t){box.innerHTML="<div class='panel'><h2>Ticket not found</h2></div>";navigateTo("ticket");return;}
+  let e=eventById(t.eventId);
+  box.innerHTML=`
+    <div class="ticket-sheet">
+      <div class="ticket-head">
+        <span class="eyebrow">${e.category} · CONFIRMED</span>
+        <h1>${e.name}</h1>
+        <p>${e.date} · ${e.time} · ${e.venue}</p>
+      </div>
+      <div class="ticket-info">
+        <div><span>Attendee</span><strong>${t.buyer}</strong></div>
+        <div><span>Ticket type</span><strong>${t.type}</strong></div>
+        <div><span>Ticket number</span><strong>${t.id}</strong></div>
+        <div><span>Paid</span><strong>${money(t.price)}</strong></div>
+      </div>
+      <div class="qr"><b>SCAN<br>${t.id.slice(-5)}</b></div>
+      <div class="ticket-foot">
+        <span style="font-size:13px;color:#666;">Present this QR code at the entrance.</span>
+        <button type="button" class="btn btn-dark" onclick="downloadTicket('${t.id}')">Download ticket</button>
+      </div>
+    </div>`;
+  navigateTo("ticket");
+}
+
+function downloadTicket(id){
+  let t=demoTickets.find(tk=>tk.id===id);
+  if(!t)return;
+  let e=eventById(t.eventId);
+  let html=`<!doctype html><html><body style="font-family:Arial;padding:40px;max-width:600px;margin:auto">
+    <h1>${e.name}</h1>
+    <p>${e.date} · ${e.time}</p>
+    <p>${e.venue}, ${e.city}</p><hr>
+    <h2>${t.type}</h2>
+    <p>Attendee: ${t.buyer}</p>
+    <p>Ticket: ${t.id}</p>
+    <p>Paid: ${money(t.price)}</p>
+    <div style="font-size:34px;letter-spacing:5px;margin-top:40px;font-weight:700">QR · ${t.id.slice(-5)}</div>
+  </body></html>`;
+  let blob=new Blob([html],{type:"text/html"});
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=`${t.id}-${e.name.replaceAll(" ","-")}.html`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast("Ticket file downloaded");
+}
+
+/* =========================================================
+   RENDER: ORGANIZER
+   ========================================================= */
+function renderOrganizer(){
+  const greetingEl = $("#organizerGreeting");
+  if(greetingEl){
+    const name = authState.user?.name || "Tapson";
+    const hour = new Date().getHours();
+    let timeGreeting = "Good evening";
+    if (hour < 12) timeGreeting = "Good morning";
+    else if (hour < 18) timeGreeting = "Good afternoon";
+    greetingEl.textContent = `${timeGreeting}, ${name}.`;
+  }
+
+  let box=$("#organizerEvents");
+  if(!box)return;
+  box.innerHTML=demoEvents.filter(e=>e.owner).map(e=>{
+    let tiersHtml = '';
+    if(e.tiers && e.tiers.length > 0){
+      tiersHtml = `<div style="margin-top:12px;padding-top:12px;border-top:1px solid #e8e6e2;">
+        <div style="font-size:12px;font-weight:600;color:#737373;margin-bottom:8px;">Ticket Tiers:</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;">
+          ${e.tiers.map(t => `<div style="padding:8px;background:#fafaf9;border-radius:6px;font-size:12px;">
+            <div style="font-weight:600;">${t.name}</div>
+            <div style="color:#737373;">K ${t.price.toLocaleString()} · ${t.quantity} qty</div>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    }
+    return `
+    <div class="org-event">
+      <div>
+        <h3>${e.name}</h3>
+        <p>${e.date} · ${e.sold}/${e.capacity} tickets sold · ${money(e.sold*e.price)} gross</p>
+        ${tiersHtml}
+      </div>
+      <div class="org-actions">
+        <button type="button" class="mini-btn" onclick="navigateTo('sales')">Sales</button>
+        <button type="button" class="mini-btn" onclick="editEvent('${e.id}')">Edit</button>
+        <button type="button" class="mini-btn" onclick="deleteEvent('${e.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function editEvent(id){
+  const event = eventById(id);
+  if(!event){ toast("Event not found"); return; }
+  
+  const tiersList = event.tiers && event.tiers.length > 0 ? 
+    event.tiers.map(t => `
+      <div class="tier-item">
+        <div style="flex:1;">
+          <div style="font-weight:600;margin-bottom:4px;">${t.name}</div>
+          <div style="font-size:12px;color:#737373;">K ${t.price.toLocaleString()} × ${t.quantity} tickets</div>
+          ${t.description ? '<div style="font-size:12px;color:#666;margin-top:6px;">' + t.description + '</div>' : ''}
+        </div>
+        <button type="button" class="btn btn-ghost" style="padding:8px 12px;font-size:12px;min-height:auto;" onclick="removeTierFromEvent('${id}','${t.id}')">Remove</button>
+      </div>
+    `).join('') : '<p style="color:#737373;text-align:center;padding:20px;">No custom tiers.</p>';
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal-backdrop';
+  modal.innerHTML = `
+    <div class="modal-box">
+      <h2 style="margin:0 0 20px 0;font-size:20px;">${event.name}</h2>
+      <div style="margin-bottom:22px;">
+        <h3 style="font-size:13px;color:#737373;margin:0 0 15px 0;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">Ticket Tiers</h3>
+        ${tiersList}
+      </div>
+      <button type="button" class="btn btn-ghost full" onclick="this.closest('.modal-backdrop').remove()">Close</button>
+    </div>
+  `;
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
+  });
+  
+  document.body.appendChild(modal);
+}
+
+function removeTierFromEvent(eventId, tierId){
+  if(!confirm("Remove this ticket tier?")) return;
+  const event = eventById(eventId);
+  if(event && event.tiers){
+    event.tiers = event.tiers.filter(t => t.id !== tierId);
+    renderOrganizer();
+    toast("Tier removed");
+    document.querySelector('.modal-backdrop')?.remove();
+    editEvent(eventId);
+  }
+}
+
+function deleteEvent(id){
+  if(confirm("Delete this demo event?")){
+    let e=eventById(id);
+    e.deleted=true;
+    renderOrganizer();
+    toast("Event deleted in demo mode");
+  }
+}
+
+function renderSales(){
+  let box=$("#salesTable");
+  if(box)box.innerHTML=sales.map(r=>
+    `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td><span class="status">${r[4]}</span></td><td>${r[5]}</td></tr>`
+  ).join("");
+  let boxFull=$("#salesTableFull");
+  if(boxFull)boxFull.innerHTML=sales.map(r=>
+    `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td><span class="status">${r[4]}</span></td><td>${r[5]}</td></tr>`
+  ).join("");
+}
+
+function renderPayouts(){
+  let box=$("#payoutList");
+  if(box)box.innerHTML=payouts.map(x=>
+    `<div class="payout-row"><div><strong>${x[0]}</strong><small>Settlement to •••• 4821</small></div><strong>${x[1]}</strong></div>`
+  ).join("");
+  let boxFull=$("#payoutListFull");
+  if(boxFull)boxFull.innerHTML=payouts.map(x=>
+    `<div class="payout-row"><div><strong>${x[0]}</strong><small>Settlement to •••• 4821</small></div><strong>${x[1]}</strong></div>`
+  ).join("");
+}
+
+function renderRecent(){
+  let box=$("#recentSales");
+  if(box)box.innerHTML=sales.slice(0,4).map(r=>
+    `<div><div><strong>${r[0]}</strong><small>${r[1]} · ${r[5]}</small></div><strong>${r[3]}</strong></div>`
+  ).join("");
+}
+
+/* =========================================================
+   ROUTER
+   ========================================================= */
+const routes={
+  home:"page-home",
+  events:"page-events",
+  event:"page-event",
+  checkout:"page-checkout",
+  attendee:"page-attendee",
+  ticket:"page-ticket",
+  organizer:"page-organizer",
+  create:"page-create",
+  payouts:"page-payouts",
+  sales:"page-sales",
+  login:"page-login",
+  "login-attendee":"page-login-attendee",
+  "login-organizer":"page-login-organizer",
+  signup:"page-signup"
+};
+
+let currentRoute = null;
+
+function showPage(route) {
+  const attendeeRoutes = ['attendee', 'ticket', 'checkout'];
+  const organizerRoutes = ['organizer', 'create', 'payouts', 'sales'];
+  const protectedRoutes = [...attendeeRoutes, ...organizerRoutes];
+  
+  if(protectedRoutes.includes(route) && !authState.isLoggedIn){
+    toast("Please log in to access this page");
+    route = "login";
+  }
+  
+  if(attendeeRoutes.includes(route) && authState.isLoggedIn && authState.userType === 'organizer'){
+    toast("This page is for Attendees only");
+    route = "organizer";
+  }
+  
+  if(organizerRoutes.includes(route) && authState.isLoggedIn && authState.userType === 'attendee'){
+    toast("This page is for Organizers only");
+    route = "attendee";
+  }
+  
+  $$(".page-section").forEach(s=>s.classList.remove("active"));
+  let id = routes[route] || routes.home;
+  document.getElementById(id)?.classList.add("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+  closeMenu();
+  currentRoute = route;
+  updateTabBar(route);
+  saveAppState();
+}
+
+function navigateTo(route) {
+  if(route === "tickets") route = authState.isLoggedIn && authState.userType === "organizer" ? "organizer" : "attendee";
+  if(route === "account") route = authState.isLoggedIn ? (authState.userType === "organizer" ? "organizer" : "attendee") : "login";
+  if (!routes[route]) route = "home";
+  if (location.hash !== "#" + route) {
+    location.hash = route;
+  } else {
+    showPage(route);
+  }
+}
+
+window.addEventListener("hashchange", () => {
+  const route = location.hash.replace("#","") || "home";
+  showPage(routes[route] ? route : "home");
+  if(route === "event" && !$("#eventDetail")?.innerHTML.trim()){
+    showEventDetail("e1");
+  }
+  if(route === "checkout" && !$("#checkoutContent")?.innerHTML.trim()){
+    if(authState.isLoggedIn) {
+      openCheckout("e1","General Admission");
+    } else {
+      toast("Please log in to access checkout");
+      navigateTo("login");
+    }
+  }
+});
+
+/* =========================================================
+   PWA / APP SHELL
+   ========================================================= */
+const APP_STORAGE_KEY = "passly-app-state-v1";
+let deferredInstallPrompt = null;
+
+function saveAppState(){
+  try {
+    localStorage.setItem(APP_STORAGE_KEY, JSON.stringify({
+      authState,
+      demoEvents,
+      demoTickets,
+      eventTicketTiers
+    }));
+  } catch(e) {}
+}
+
+function loadAppState(){
+  try {
+    const raw = localStorage.getItem(APP_STORAGE_KEY);
+    if(!raw) return;
+    const saved = JSON.parse(raw);
+    if(saved.authState) authState = saved.authState;
+    if(Array.isArray(saved.demoEvents) && saved.demoEvents.length) {
+      demoEvents.splice(0, demoEvents.length, ...saved.demoEvents);
+    }
+    if(Array.isArray(saved.demoTickets) && saved.demoTickets.length) {
+      demoTickets.splice(0, demoTickets.length, ...saved.demoTickets);
+    }
+    if(Array.isArray(saved.eventTicketTiers)) eventTicketTiers = saved.eventTicketTiers;
+  } catch(e) {}
+}
+
+function setupInstallPrompt(){
+  const banner = $("#installBanner");
+  const button = $("#installButton");
+  const hint = $("#installHint");
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+
+  if(standalone && banner) banner.style.display = "none";
+  if(isIOS && !standalone && hint) hint.textContent = "Tap Share, then Add to Home Screen.";
+
+  window.addEventListener("beforeinstallprompt", e => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    if(button) button.style.display = "inline-flex";
+  });
+
+  if(button) button.addEventListener("click", async () => {
+    if(deferredInstallPrompt){
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      banner.style.display = "none";
+    } else if(isIOS){
+      toast("On iPhone: Share → Add to Home Screen");
+    } else {
+      toast("Use your browser's Install App option");
+    }
+  });
+}
+
+function registerServiceWorker(){
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.register("sw.js", {scope:"./"}).catch(()=>{});
+  }
+}
+
+function updateTabBar(route){
+  let base = route;
+  if(["attendee","ticket","checkout"].includes(route)) base="tickets";
+  if(["organizer","create","payouts","sales"].includes(route)) base="account";
+  if(["event"].includes(route)) base="events";
+  $$(".ios-tab").forEach(tab => tab.classList.toggle("active", tab.dataset.tabRoute === base));
+  const label = $("#tabThirdLabel");
+  if(label) label.textContent = authState.isLoggedIn && authState.userType === "organizer" ? "Manage" : "Tickets";
+}
+
+/* =========================================================
+   AUTHENTICATION
+   ========================================================= */
+function handleAttendeeLogin(event){
+  event.preventDefault();
+  const email = $("#attendeeEmail").value;
+  const password = $("#attendeePassword").value;
+  
+  if(email && password){
+    const rawName = email.split('@')[0];
+    const name = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+    
+    authState.isLoggedIn = true;
+    authState.user = { name: name, email: email };
+    authState.userType = 'attendee';
+    toast("Welcome back, " + name + "!");
+    $("#loginAttendeeForm").reset();
+    updateHeaderAuth();
+    saveAppState();
+    navigateTo("attendee");
+  }
+}
+
+function handleOrganizerLogin(event){
+  event.preventDefault();
+  const email = $("#organizerEmail").value;
+  const password = $("#organizerPassword").value;
+  
+  if(email && password){
+    const rawName = email.split('@')[0];
+    const name = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+    
+    authState.isLoggedIn = true;
+    authState.user = { name: name, email: email };
+    authState.userType = 'organizer';
+    toast("Welcome back, " + name + "!");
+    $("#loginOrganizerForm").reset();
+    updateHeaderAuth();
+    saveAppState();
+    navigateTo("organizer");
+  }
+}
+
+function handleSignup(event){
+  event.preventDefault();
+  const name = $("#signupName").value.trim();
+  const email = $("#signupEmail").value;
+  const password = $("#signupPassword").value;
+  const accountType = document.querySelector('input[name="accountType"]:checked').value;
+  
+  if(name && email && password){
+    authState.isLoggedIn = true;
+    authState.user = { name: name, email: email };
+    authState.userType = accountType;
+    
+    if(accountType === 'attendee'){
+      toast("Welcome, " + name + "! Your attendee account is ready.");
+      navigateTo("attendee");
+    } else {
+      toast("Welcome, " + name + "! Your organizer account is ready.");
+      navigateTo("organizer");
+    }
+    
+    $("#signupForm").reset();
+    updateHeaderAuth();
+    saveAppState();
+  }
+}
+
+function logout(){
+  authState.isLoggedIn = false;
+  authState.user = null;
+  authState.userType = null;
+  demoTickets.length = 3;
+  
+  $$(".nav-attendee").forEach(n => n.style.display = 'none');
+  $$(".nav-organizer").forEach(n => n.style.display = 'none');
+  
+  toast("Logged out successfully");
+  updateHeaderAuth();
+  saveAppState();
+  navigateTo("home");
+}
+
+function updateHeaderAuth(){
+  const headerActions = $("#headerActions");
+  const mobileAuth = $("#mobileDrawerAuth");
+  const attendeeNav = $$(".nav-attendee");
+  const organizerNav = $$(".nav-organizer");
+  const attendeeMobile = $$(".nav-attendee-mobile");
+  const organizerMobile = $$(".nav-organizer-mobile");
+  
+  attendeeNav.forEach(n => n.style.display = authState.isLoggedIn && authState.userType === 'attendee' ? 'inline-block' : 'none');
+  organizerNav.forEach(n => n.style.display = authState.isLoggedIn && authState.userType === 'organizer' ? 'inline-block' : 'none');
+  attendeeMobile.forEach(n => n.style.display = authState.isLoggedIn && authState.userType === 'attendee' ? 'block' : 'none');
+  organizerMobile.forEach(n => n.style.display = authState.isLoggedIn && authState.userType === 'organizer' ? 'block' : 'none');
+  
+  if(authState.isLoggedIn){
+    const userType = authState.userType === 'organizer' ? 'Organizer' : 'Attendee';
+    const displayName = authState.user.name;
+    
+    if(headerActions){
+      headerActions.innerHTML = `
+        <div style="display:flex;align-items:center;gap:15px;">
+          <span style="font-size:12px;color:#999;">${userType}</span>
+          <span style="font-size:13px;color:#666;">${displayName}</span>
+          <button type="button" class="btn btn-ghost" onclick="logout()">Log out</button>
+        </div>
+      `;
+    }
+    if(mobileAuth){
+      mobileAuth.innerHTML = `
+        <div class="drawer-user">
+          <strong>${displayName}</strong>
+          <small>${userType}</small>
+        </div>
+        <button type="button" class="drawer-ghost" onclick="logout()">Log out</button>
+      `;
+    }
+  } else {
+    if(headerActions){
+      headerActions.innerHTML = `
+        <a class="btn btn-ghost" onclick="navigateTo('login')">Log in</a>
+        <a class="btn btn-dark" onclick="navigateTo('signup')">Get started</a>
+      `;
+    }
+    if(mobileAuth){
+      mobileAuth.innerHTML = `
+        <a onclick="navigateTo('login')" class="drawer-ghost">Log in</a>
+        <a onclick="navigateTo('signup')" class="drawer-cta">Get started</a>
+      `;
+    }
+  }
+}
+
+/* =========================================================
+   TICKET TIER MANAGEMENT
+   ========================================================= */
+function addTicketTier(){
+  const name = $("#tierName").value.trim();
+  const price = Number($("#tierPrice").value) || 0;
+  const quantity = Number($("#tierQuantity").value) || 0;
+  const desc = $("#tierDesc").value.trim();
+  
+  if(!name || price <= 0 || quantity <= 0){
+    toast("Please fill in all tier fields with valid values");
+    return;
+  }
+  
+  eventTicketTiers.push({
+    name,
+    price,
+    quantity,
+    description: desc,
+    id: "tier-" + Date.now()
+  });
+  
+  $("#tierName").value = "";
+  $("#tierPrice").value = "50";
+  $("#tierQuantity").value = "100";
+  $("#tierDesc").value = "";
+  
+  renderTicketTiers();
+  toast("Tier added: " + name);
+}
+
+function removeTicketTier(tierId){
+  eventTicketTiers = eventTicketTiers.filter(t => t.id !== tierId);
+  renderTicketTiers();
+  toast("Tier removed");
+}
+
+function renderTicketTiers(){
+  const container = $("#ticketTiersList");
+  if(!container) return;
+  
+  if(eventTicketTiers.length === 0){
+    container.innerHTML = '<p style="color:#737373;text-align:center;padding:18px;font-size:14px;">No tiers added yet. Add one below to get started.</p>';
+    return;
+  }
+  
+  container.innerHTML = eventTicketTiers.map(tier => `
+    <div class="tier-item">
+      <div style="flex:1;">
+        <div style="font-weight:600;margin-bottom:4px;">${tier.name}</div>
+        <div style="font-size:12px;color:#737373;line-height:1.5;">
+          <div>K ${tier.price.toLocaleString()} · ${tier.quantity} tickets</div>
+          ${tier.description ? '<div style="margin-top:6px;color:#555;">' + tier.description + '</div>' : ''}
+        </div>
+      </div>
+      <button type="button" class="btn btn-ghost" style="padding:8px 12px;font-size:12px;min-height:auto;" onclick="removeTicketTier('${tier.id}')">Remove</button>
+    </div>
+  `).join("");
+}
+
+/* =========================================================
+   INIT
+   ========================================================= */
+document.addEventListener("DOMContentLoaded",()=>{
+  loadAppState();
+  registerServiceWorker();
+  setupInstallPrompt();
+  updateHeaderAuth();
+  renderFeatured();
+  renderEvents();
+  renderTickets();
+  renderOrganizer();
+  renderSales();
+  renderPayouts();
+  renderRecent();
+  renderTicketTiers();
+
+  let form=$("#eventForm");
+  if(form)form.addEventListener("submit",e=>{
+    e.preventDefault();
+    
+    if(eventTicketTiers.length === 0){
+      toast("Please add at least one ticket tier");
+      return;
+    }
+    
+    let f=new FormData(form);
+    let id="e"+(demoEvents.length+1);
+    
+    const totalCapacity = eventTicketTiers.reduce((sum, t) => sum + t.quantity, 0);
+    const basePrice = Math.min(...eventTicketTiers.map(t => t.price));
+    
+    let ev={
+      id,
+      name:f.get("name"),
+      category:f.get("category") || "General",
+      date:new Date(f.get("date")+"T00:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"}),
+      iso:f.get("date"),
+      time:f.get("time"),
+      venue:f.get("venue"),
+      city:f.get("city"),
+      price:basePrice,
+      capacity:totalCapacity,
+      sold:0,
+      owner:true,
+      desc:f.get("description")||"New event hosted on Passly.",
+      art:"NEW",
+      tiers:JSON.parse(JSON.stringify(eventTicketTiers))
+    };
+    demoEvents.push(ev);
+    saveAppState();
+    
+    eventTicketTiers = [];
+    renderTicketTiers();
+    form.reset();
+    
+    toast("Event published with " + ev.tiers.length + " ticket tiers");
+    renderEvents();
+    renderFeatured();
+    renderOrganizer();
+    navigateTo("organizer");
+  });
+
+  const initialRoute = location.hash.replace("#", "") || "home";
+  showPage(routes[initialRoute] ? initialRoute : "home");
+
+  window.addEventListener("popstate", () => {});
+  document.addEventListener("keydown", e => {
+    if(e.key === "Escape") closeMenu();
+  });
+
+  window.addEventListener('resize', () => {
+    if (window.innerWidth >= 900) closeMenu();
+  });
+});
+</script>
+</body>
+</html>
